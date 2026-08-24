@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -52,7 +53,8 @@ public final class ChestActions {
 
 		List<ItemStack> merged = merge(container, gathered);
 		merged.sort(Comparator
-			.comparing((ItemStack s) -> BuiltInRegistries.ITEM.getKey(s.getItem()).toString())
+			.comparingInt((ItemStack s) -> ItemOrder.of(s.getItem()))
+			.thenComparing(s -> ItemOrder.nameOf(s.getItem()))
 			.thenComparing(ItemStack::getCount, Comparator.reverseOrder()));
 
 		boolean changed = false;
@@ -64,6 +66,63 @@ public final class ChestActions {
 		}
 		if (changed) container.setChanged();
 		return changed;
+	}
+
+	/**
+	 * Sort a player's pack, leaving the hotbar as they arranged it.
+	 *
+	 * <p>The hotbar is not storage, it is a set of controls. Where somebody keeps their pickaxe
+	 * is a decision they made once and now reach for without looking, and a tidy-up that files it
+	 * under p has broken something no amount of neatness pays for. Only the three rows above it
+	 * are rearranged; the armour and the offhand are outside the range entirely.
+	 */
+	public static boolean sortPack(Inventory pack) {
+		// Top up first, then sort what is left. The other way round would sort the rows, then
+		// pull items out of them to fill the hotbar, and leave gaps in a freshly tidied grid.
+		boolean topped = refillHotbar(pack);
+		boolean sorted = sort(pack, Inventory.SELECTION_SIZE, Inventory.INVENTORY_SIZE);
+		return topped || sorted;
+	}
+
+	/**
+	 * Fill the hotbar's part-used stacks from the rows above, without moving anything.
+	 *
+	 * <p>Every sorting mod that rearranges the hotbar gets complaints about it, and the reason is
+	 * that the hotbar is not storage - it is a set of controls. Which key the pickaxe is under
+	 * was decided once and is now reached for without looking, and no amount of tidiness pays for
+	 * breaking that.
+	 *
+	 * <p>But leaving it untouched gives up the thing people liked most about the old Inventory
+	 * Tweaks: the refill. So nothing moves and nothing is reordered, and the half-empty stack of
+	 * torches in slot three simply becomes a full one. Positions are the player's; quantities
+	 * are the chore.
+	 */
+	private static boolean refillHotbar(Inventory pack) {
+		boolean filled = false;
+
+		for (int slot = 0; slot < Inventory.SELECTION_SIZE; slot++) {
+			ItemStack held = pack.getItem(slot);
+			if (held.isEmpty()) continue;
+
+			int cap = Math.min(pack.getMaxStackSize(held), held.getMaxStackSize());
+			if (held.getCount() >= cap) continue;
+
+			for (int from = Inventory.SELECTION_SIZE; from < Inventory.INVENTORY_SIZE; from++) {
+				ItemStack spare = pack.getItem(from);
+				if (spare.isEmpty() || !ItemStack.isSameItemSameComponents(spare, held)) continue;
+
+				int room = cap - held.getCount();
+				if (room <= 0) break;
+
+				int taken = Math.min(room, spare.getCount());
+				held.grow(taken);
+				spare.shrink(taken);
+				if (spare.isEmpty()) pack.setItem(from, ItemStack.EMPTY);
+				filled = true;
+			}
+		}
+		if (filled) pack.setChanged();
+		return filled;
 	}
 
 	/** Everything in the range that will fit, into the other container. */

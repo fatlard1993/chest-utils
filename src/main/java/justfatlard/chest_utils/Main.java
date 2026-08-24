@@ -13,6 +13,10 @@ public class Main implements ModInitializer {
 	public void onInitialize() {
 		ChestScreens.register();
 
+		// The creative tabs are only assembled once the registries are loaded.
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(
+			justfatlard.chest_utils.action.ItemOrder::build);
+
 		net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register(
 			justfatlard.chest_utils.block.DyeInteraction::onUse);
 
