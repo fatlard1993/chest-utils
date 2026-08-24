@@ -32,6 +32,21 @@ public final class DyeInteraction {
 		return id.endsWith("_dye") ? id.substring(0, id.length() - 4).toLowerCase(Locale.ROOT) : null;
 	}
 
+	/**
+	 * Drop the dye a broken chest was painted with.
+	 *
+	 * <p>Popped where the chest was, beside the chest itself, so the paint behaves like every
+	 * other thing a block is made of: you get back what you put in and the colour lives only on
+	 * placed chests.
+	 */
+	public static void giveBack(ServerLevel level, BlockPos pos, String colour) {
+		var dye = BuiltInRegistries.ITEM.getOptional(
+			net.minecraft.resources.Identifier.withDefaultNamespace(colour + "_dye")).orElse(null);
+		if (dye == null) return;
+
+		net.minecraft.world.level.block.Block.popResource(level, pos, new ItemStack(dye));
+	}
+
 	public static InteractionResult onUse(Player player, Level level, InteractionHand hand,
 			BlockHitResult hit) {
 		if (level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) {

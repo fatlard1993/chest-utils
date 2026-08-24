@@ -27,7 +27,9 @@ public class Main implements ModInitializer {
 		net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents.AFTER.register(
 			(level, player, pos, state, blockEntity) -> {
 				if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-					justfatlard.chest_utils.block.DyedChests.get(serverLevel).strip(serverLevel, pos);
+					String was = justfatlard.chest_utils.block.DyedChests.get(serverLevel)
+						.strip(serverLevel, pos);
+					if (was != null) justfatlard.chest_utils.block.DyeInteraction.giveBack(serverLevel, pos, was);
 				}
 			});
 

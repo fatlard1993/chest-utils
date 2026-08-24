@@ -69,14 +69,24 @@ public final class DyedChests extends SavedData {
 		}
 	}
 
-	/** A chest that is no longer there, or no longer painted. */
-	public void strip(ServerLevel level, BlockPos pos) {
-		if (this.painted.remove(pos.asLong()) == null) return;
+	/**
+	 * Forget a chest's paint, and say what colour it was.
+	 *
+	 * <p>Returns the colour so the caller can decide what it owes: breaking one hands the dye
+	 * back, because a painted chest is a placed thing and never an item. There is no dyed chest
+	 * to carry, no sixteen variants filling a creative tab, and no way to end up holding one the
+	 * server has no block for - break it and you get a chest and your dye, which is exactly what
+	 * you put in.
+	 */
+	public String strip(ServerLevel level, BlockPos pos) {
+		String was = this.painted.remove(pos.asLong());
+		if (was == null) return null;
 		this.setDirty();
 
 		for (ServerPlayer player : level.players()) {
 			PandoricalApi.chestOverlays().remove(player, List.of(pos));
 		}
+		return was;
 	}
 
 	/**
