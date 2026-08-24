@@ -9,6 +9,7 @@ import justfatlard.pandorical.api.ComponentType;
 import justfatlard.pandorical.api.PandoricalApi;
 import justfatlard.pandorical.api.ScreenBuilder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 
@@ -47,6 +48,18 @@ public final class ChestScreens {
 	private static final Map<ServerPlayer, Container> looking = new WeakHashMap<>();
 
 	public static void register() {
+		// On the player's own screen too. Tidying your pack is wanted standing in a field, not
+		// only while looking into somebody's chest, and the button that does it should not be
+		// somewhere you have to open a chest to reach.
+		var slots = PandoricalApi.playerInventory();
+		Identifier me = Identifier.fromNamespaceAndPath("chest-utils", "chest-utils");
+		// Top right, the one corner of the vanilla panel nothing already claims: the armour
+		// runs down the left, the recipe-book toggle and map-plus-plus's two slots fill the row
+		// at y=62, and the crafting label stops well short of here.
+		slots.registerButton(me, "sort_inv", 155, 6, BUTTON_SIZE, GLYPH_SORT);
+		slots.onButton(me, "sort_inv", player -> ChestActions.sort(player.getInventory(),
+			0, net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE));
+
 		var screens = PandoricalApi.screens();
 
 		screens.onAction(SCREEN_ID, "sort", (player, data) -> act(player, Action.SORT));
