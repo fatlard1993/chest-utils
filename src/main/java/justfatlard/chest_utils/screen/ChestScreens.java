@@ -80,6 +80,37 @@ public final class ChestScreens {
 		}
 	}
 
+	/** Wide enough for nine columns and a column of buttons beside them. */
+	private static final int WIDTH = 220;
+	private static final int BUTTON_X = 174;
+	private static final int BUTTON_W = 40;
+	private static final int BUTTON_H = 12;
+
+	/**
+	 * Lay out a chest of this many rows and hand back where the pack starts.
+	 *
+	 * <p>Nine columns of slots is 162 pixels and the vanilla chest is 176 wide, which leaves no
+	 * room beside them for anything to press. So the screen is widened rather than the buttons
+	 * squeezed: four labels crammed into the title row is how they came out as "Sor..." and
+	 * "Emp...", which says nothing at all.
+	 */
+	private static int layout(ScreenBuilder screen, Component title, int rows) {
+		int chestSlots = rows * COLS;
+		int packY = 18 + rows * SLOT + 14;
+		int height = packY + 3 * SLOT + 4 + SLOT + 8;
+
+		screen.size(WIDTH, height);
+		screen.panel("bg", 0, 0, WIDTH, height, Map.of("border", "beveled"));
+		screen.text("title", MARGIN, 6, Map.of("text", title.getString(), "color", "#404040"));
+
+		screen.inventoryGrid("chest", MARGIN, 18, rows, COLS, 0);
+		screen.text("pack_label", MARGIN, packY - 10, Map.of("text", "Inventory", "color", "#404040"));
+		screen.inventoryGrid("pack", MARGIN, packY, 3, COLS, chestSlots);
+		screen.inventoryGrid("hotbar", MARGIN, packY + 3 * SLOT + 4, 1, COLS, chestSlots + 27);
+
+		return packY;
+	}
+
 	/**
 	 * Show this container with the buttons attached.
 	 *
@@ -88,26 +119,14 @@ public final class ChestScreens {
 	public static void open(ServerPlayer player, Container container, Component title, int rows) {
 		looking.put(player, container);
 
-		int chestSlots = rows * COLS;
-		int gridBottom = 18 + rows * SLOT;
-		int packY = gridBottom + 14;
-		int height = packY + 4 * SLOT + 10;
+		ScreenBuilder screen = new ScreenBuilder(SCREEN_ID).container(rows * COLS, true);
+		int packY = layout(screen, title, rows);
 
-		ScreenBuilder screen = new ScreenBuilder(SCREEN_ID)
-			.size(176, height)
-			.title(title.getString())
-			.container(chestSlots, true);
-
-		screen.inventoryGrid("chest", MARGIN, 18, rows, COLS, 0);
-		screen.inventoryGrid("pack", MARGIN, packY, 3, COLS, chestSlots);
-		screen.inventoryGrid("hotbar", MARGIN, packY + 3 * SLOT + 4, 1, COLS, chestSlots + 27);
-
-		// Along the top edge, where the chest's own name leaves room and no slot ever sits.
-		button(screen, "sort", 96, 5, "Sort");
-		button(screen, "topup", 116, 5, "Top up");
-		button(screen, "dump", 140, 5, "Dump");
-		button(screen, "empty", 160, 5, "Empty");
-		button(screen, "sort_inv", MARGIN, packY - 12, "Sort pack");
+		button(screen, "sort", 18, "Sort");
+		button(screen, "topup", 34, "Top up");
+		button(screen, "dump", 50, "Dump");
+		button(screen, "empty", 66, "Empty");
+		button(screen, "sort_inv", packY, "Sort pack");
 
 		PandoricalApi.screens().openContainer(player, screen.build(), container, Set.of());
 	}
@@ -122,30 +141,19 @@ public final class ChestScreens {
 			int rows) {
 		looking.put(player, container);
 
-		int chestSlots = rows * COLS;
-		int gridBottom = 18 + rows * SLOT;
-		int packY = gridBottom + 14;
-		int height = packY + 4 * SLOT + 10;
+		ScreenBuilder screen = new ScreenBuilder(SCREEN_TAKE_ONLY).container(rows * COLS, true);
+		int packY = layout(screen, title, rows);
 
-		ScreenBuilder screen = new ScreenBuilder(SCREEN_TAKE_ONLY)
-			.size(176, height)
-			.title(title.getString())
-			.container(chestSlots, true);
-
-		screen.inventoryGrid("chest", MARGIN, 18, rows, COLS, 0);
-		screen.inventoryGrid("pack", MARGIN, packY, 3, COLS, chestSlots);
-		screen.inventoryGrid("hotbar", MARGIN, packY + 3 * SLOT + 4, 1, COLS, chestSlots + 27);
-
-		button(screen, "top_off", 116, 5, "Top off");
-		button(screen, "take_all", 148, 5, "Take all");
-		button(screen, "sort_inv", MARGIN, packY - 12, "Sort pack");
+		button(screen, "top_off", 18, "Top off");
+		button(screen, "take_all", 34, "Take all");
+		button(screen, "sort_inv", packY, "Sort pack");
 
 		PandoricalApi.screens().openContainer(player, screen.build(), container, Set.of());
 	}
 
-	private static void button(ScreenBuilder screen, String id, int x, int y, String label) {
+	private static void button(ScreenBuilder screen, String id, int y, String label) {
 		Map<String, String> props = new LinkedHashMap<>();
 		props.put(ComponentType.PROP_LABEL, label);
-		screen.button(id, x, y, 0, 10, props);
+		screen.button(id, BUTTON_X, y, BUTTON_W, BUTTON_H, props);
 	}
 }
