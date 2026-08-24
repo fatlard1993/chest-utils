@@ -33,10 +33,14 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  * pickaxe you own; a slot holding torches is a torch slot and gets torches, never something
  * torch-shaped. Nothing is ever moved out of the hotbar and nothing in it is reordered.
  *
- * <p>The exception is the first sort, when there is nothing to read. That one lays the hotbar out
- * - tools from the left in reaching order, torches after them, food at the far end - and the
- * layout it produces is the first thing it learns. From then on the player's own arrangement is
- * the standard, because it is the one their hands know.
+ * <p>Unlocked - which is where everybody starts - every sort lays the hotbar out the same way
+ * instead: tools from the left in reaching order, torches after them, food at the far end. That
+ * is the opinionated default, and it is worth having as a default because most hotbars are not
+ * arranged so much as accumulated.
+ *
+ * <p>Which of the two is running is the player's to say, at any time, from the button beside the
+ * sort one. Locking takes the hotbar as it stands to be the layout; unlocking hands it back to
+ * the rules.
  */
 public final class HotbarLocks extends SavedData {
 	private static final String STORAGE_KEY = "chest-utils:hotbar_locks";
@@ -112,40 +116,48 @@ public final class HotbarLocks extends SavedData {
 		return locks.getOrDefault(player, List.of());
 	}
 
-	/** Forget a hotbar, so the next sort lays it out from scratch. */
-	public boolean forget(UUID player) {
-		if (locks.remove(player) == null) return false;
-		this.setDirty();
-		return true;
+	public boolean isLocked(UUID player) {
+		return locks.containsKey(player);
 	}
 
 	/**
-	 * Fill the hotbar's held slots, then learn what it now says.
+	 * Take the hotbar as it stands to be the layout.
+	 *
+	 * <p>Nothing moves. What is there is already what the player wanted there, which is the whole
+	 * reason they are locking it.
+	 */
+	public void lock(ServerPlayer player) {
+		locks.put(player.getUUID(), learn(player.getInventory(), null));
+		this.setDirty();
+	}
+
+	/** Hand the hotbar back to the default rules. */
+	public void unlock(UUID player) {
+		if (locks.remove(player) != null) this.setDirty();
+	}
+
+	/**
+	 * Serve the hotbar, whichever way this player has it set.
 	 *
 	 * <p>Called before the rows are sorted, for the same reason the top-up is: pulling stacks out
 	 * of a grid that was just put in order undoes the ordering.
-	 *
-	 * @return true if this was the layout pass, so the caller can say what happened
 	 */
-	public boolean apply(ServerPlayer player) {
+	public void apply(ServerPlayer player) {
 		Inventory pack = player.getInventory();
 		List<Lock> plan = locks.get(player.getUUID());
 
-		boolean laidOut = plan == null;
-		if (laidOut) {
+		if (plan == null) {
 			arrange(pack);
 		} else {
 			refill(pack, plan);
+			locks.put(player.getUUID(), learn(pack, plan));
+			this.setDirty();
 		}
-
-		locks.put(player.getUUID(), learn(pack, plan));
-		this.setDirty();
 		pack.setChanged();
-		return laidOut;
 	}
 
 	/**
-	 * The opening layout, for a hotbar nobody has told us anything about.
+	 * The default layout, for a hotbar its owner has not claimed.
 	 *
 	 * <p>Tools first, from the left, in reaching order, and only the ones actually owned - a
 	 * player with no hoe gets their shovel a slot earlier rather than a gap where a hoe would go.

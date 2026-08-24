@@ -26,6 +26,10 @@ public class Main implements ModInitializer {
 			(handler, sender, server) -> {
 				var player = handler.getPlayer();
 				justfatlard.chest_utils.block.DyedChests.get(player.level()).restate(player);
+
+				// And no client remembers which way the hotbar switch was thrown either.
+				ChestScreens.showLock(player,
+					justfatlard.chest_utils.action.HotbarLocks.get(player).isLocked(player.getUUID()));
 			});
 
 		// Paint belongs to the chest, not to the hole it left.

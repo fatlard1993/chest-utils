@@ -60,6 +60,11 @@ public final class ChestScreens {
 		slots.registerButton(me, "sort_inv", 155, 6, BUTTON_SIZE, GLYPH_SORT);
 		slots.onButton(me, "sort_inv", ChestScreens::sortPack);
 
+		// Beside it, in the one gap left between the crafting label and the sort button: which of
+		// the two things sorting does to the hotbar.
+		slots.registerButton(me, "lock_hotbar", 137, 6, BUTTON_SIZE, GLYPH_UNLOCKED);
+		slots.onButton(me, "lock_hotbar", ChestScreens::toggleLock);
+
 		var screens = PandoricalApi.screens();
 
 		screens.onAction(SCREEN_ID, "sort", (player, data) -> act(player, Action.SORT));
@@ -83,14 +88,32 @@ public final class ChestScreens {
 	 * mean pulling stacks back out of a grid that was just put in order.
 	 */
 	private static void sortPack(ServerPlayer player) {
-		boolean laidOut = HotbarLocks.get(player).apply(player);
+		HotbarLocks.get(player).apply(player);
 		ChestActions.sortPack(player.getInventory());
+	}
 
-		// Said once, and only the once it is a surprise: this is the pass that moves the hotbar.
-		if (laidOut) {
-			player.sendSystemMessage(Component.literal(
-				"Hotbar laid out - from here it keeps your arrangement and refills it. /hotbar"));
+	/** Throw the switch, and say in words what the star on it now means. */
+	private static void toggleLock(ServerPlayer player) {
+		HotbarLocks locks = HotbarLocks.get(player);
+		boolean locking = !locks.isLocked(player.getUUID());
+
+		if (locking) {
+			locks.lock(player);
+		} else {
+			locks.unlock(player.getUUID());
 		}
+
+		showLock(player, locking);
+		player.sendSystemMessage(Component.literal(locking
+			? "Hotbar locked - sorting keeps this arrangement and refills it"
+			: "Hotbar unlocked - sorting lays it out by the default rules"));
+	}
+
+	/** Put the right face on the switch. Called on a press, and again on every join. */
+	public static void showLock(ServerPlayer player, boolean locked) {
+		PandoricalApi.playerInventory().setButtonGlyph(player,
+			Identifier.fromNamespaceAndPath("chest-utils", "chest-utils"), "lock_hotbar",
+			locked ? GLYPH_LOCKED : GLYPH_UNLOCKED);
 	}
 
 	private enum Action { SORT, DUMP, TOP_UP, TOP_OFF, EMPTY, SORT_INVENTORY }
@@ -129,6 +152,13 @@ public final class ChestScreens {
 	private static final int BUTTON_SIZE = 16;
 
 	private static final String GLYPH_SORT = "\u21C5";
+
+	/**
+	 * Solid means committed, hollow means not - the same reading the four transfer arrows already
+	 * ask for, so the pair does not need learning twice.
+	 */
+	private static final String GLYPH_LOCKED = "\u2605";
+	private static final String GLYPH_UNLOCKED = "\u2606";
 	private static final String GLYPH_ALL_IN = "\u2191";
 	private static final String GLYPH_MATCH_IN = "\u21E7";
 	private static final String GLYPH_ALL_OUT = "\u2193";
