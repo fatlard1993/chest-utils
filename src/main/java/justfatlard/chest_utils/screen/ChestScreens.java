@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import justfatlard.chest_utils.action.ChestActions;
+import justfatlard.chest_utils.action.HotbarLocks;
 import justfatlard.pandorical.api.ComponentType;
 import justfatlard.pandorical.api.PandoricalApi;
 import justfatlard.pandorical.api.ScreenBuilder;
@@ -57,8 +58,7 @@ public final class ChestScreens {
 		// runs down the left, the recipe-book toggle and map-plus-plus's two slots fill the row
 		// at y=62, and the crafting label stops well short of here.
 		slots.registerButton(me, "sort_inv", 155, 6, BUTTON_SIZE, GLYPH_SORT);
-		slots.onButton(me, "sort_inv", player -> ChestActions.sort(player.getInventory(),
-			0, net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE));
+		slots.onButton(me, "sort_inv", ChestScreens::sortPack);
 
 		var screens = PandoricalApi.screens();
 
@@ -74,6 +74,23 @@ public final class ChestScreens {
 
 		screens.onClose(SCREEN_ID, looking::remove);
 		screens.onClose(SCREEN_TAKE_ONLY, looking::remove);
+	}
+
+	/**
+	 * Tidy a player's pack, hotbar last-word.
+	 *
+	 * <p>The hotbar is served first: it fills from the rows, so sorting the rows before it would
+	 * mean pulling stacks back out of a grid that was just put in order.
+	 */
+	private static void sortPack(ServerPlayer player) {
+		boolean laidOut = HotbarLocks.get(player).apply(player);
+		ChestActions.sortPack(player.getInventory());
+
+		// Said once, and only the once it is a surprise: this is the pass that moves the hotbar.
+		if (laidOut) {
+			player.sendSystemMessage(Component.literal(
+				"Hotbar laid out - from here it keeps your arrangement and refills it. /hotbar"));
+		}
 	}
 
 	private enum Action { SORT, DUMP, TOP_UP, TOP_OFF, EMPTY, SORT_INVENTORY }
@@ -93,7 +110,7 @@ public final class ChestScreens {
 			case TOP_UP -> ChestActions.topUp(pack, packEnd, chest);
 			case TOP_OFF -> ChestActions.topUp(chest, chest.getContainerSize(), pack);
 			case EMPTY -> ChestActions.dump(chest, chest.getContainerSize(), pack);
-			case SORT_INVENTORY -> ChestActions.sort(pack, 0, packEnd);
+			case SORT_INVENTORY -> sortPack(player);
 		}
 	}
 

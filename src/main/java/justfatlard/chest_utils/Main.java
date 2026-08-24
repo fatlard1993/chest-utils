@@ -12,6 +12,7 @@ public class Main implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ChestScreens.register();
+		HotbarCommand.register();
 
 		// The creative tabs are only assembled once the registries are loaded.
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTED.register(
