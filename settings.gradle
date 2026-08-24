@@ -1,0 +1,11 @@
+pluginManagement {
+	repositories {
+		maven { url "https://maven.fabricmc.net/" }
+		gradlePluginPortal()
+	}
+}
+
+rootProject.name = "chest-utils"
+
+include ':pandorical'
+project(':pandorical').projectDir = new File(rootProject.projectDir, '../pandorical')
