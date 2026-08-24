@@ -42,6 +42,19 @@ public class Main implements ModInitializer {
 				}
 			});
 
+		// A locked hotbar is read back four times a second, so an arrangement changed by hand is
+		// the arrangement the lock means. Nine reference comparisons per locked player.
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (server.getTickCount() % 5 != 0) return;
+			for (var player : server.getPlayerList().getPlayers()) {
+				justfatlard.chest_utils.action.HotbarLocks.get(player).refresh(player);
+			}
+		});
+
+		net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(
+			(handler, server) -> justfatlard.chest_utils.action.HotbarLocks
+				.get(handler.getPlayer()).forgetSeen(handler.getPlayer().getUUID()));
+
 		LOGGER.info("[{}] Loaded (server-side with Pandorical)", MOD_ID);
 	}
 }

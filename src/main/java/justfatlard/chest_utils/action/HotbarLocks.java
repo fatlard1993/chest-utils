@@ -3,6 +3,7 @@ package justfatlard.chest_utils.action;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -41,6 +43,12 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  * <p>Which of the two is running is the player's to say, at any time, from the button beside the
  * sort one. Locking takes the hotbar as it stands to be the layout; unlocking hands it back to
  * the rules.
+ *
+ * <p>A locked hotbar is still an ordinary hotbar: drag things about, swap them, drop them, exactly
+ * as vanilla. Moving the pickaxe two slots left is not fighting the lock, it is restating it - the
+ * new arrangement is read back within the tick and becomes what the lock means from then on. The
+ * lock has never been a thing that stops you; it is only the difference between sorting filling
+ * your hotbar and sorting rebuilding it.
  */
 public final class HotbarLocks extends SavedData {
 	private static final String STORAGE_KEY = "chest-utils:hotbar_locks";
@@ -102,6 +110,13 @@ public final class HotbarLocks extends SavedData {
 	private final Map<UUID, List<Lock>> locks = new HashMap<>();
 
 	/**
+	 * What each locked hotbar held when it was last read, so that reading it again is nine
+	 * reference comparisons rather than nine tag lookups. Not saved: it is only ever a shortcut
+	 * for deciding whether the saved thing needs looking at.
+	 */
+	private final transient Map<UUID, Item[]> seen = new HashMap<>();
+
+	/**
 	 * Always the overworld's copy.
 	 *
 	 * <p>Saved data is stored per dimension, and a hotbar is not: sorting in the Nether and
@@ -128,12 +143,82 @@ public final class HotbarLocks extends SavedData {
 	 */
 	public void lock(ServerPlayer player) {
 		locks.put(player.getUUID(), learn(player.getInventory(), null));
+		seen.remove(player.getUUID());
 		this.setDirty();
 	}
 
 	/** Hand the hotbar back to the default rules. */
 	public void unlock(UUID player) {
+		seen.remove(player);
 		if (locks.remove(player) != null) this.setDirty();
+	}
+
+	/**
+	 * Notice that a locked hotbar has been rearranged by hand, and take the new arrangement as
+	 * what the lock now means.
+	 *
+	 * <p>Called on a timer rather than hooked to the inventory, because there is no one place a
+	 * hotbar changes: a click in the screen, a number key swap, an item dropped, a stack used up,
+	 * a pickup landing in a gap. A read this cheap can afford to just look.
+	 */
+	public void refresh(ServerPlayer player) {
+		UUID id = player.getUUID();
+		List<Lock> plan = locks.get(id);
+		if (plan == null) {
+			seen.remove(id);
+			return;
+		}
+
+		Inventory pack = player.getInventory();
+		Item[] now = new Item[Inventory.SELECTION_SIZE];
+		for (int slot = 0; slot < now.length; slot++) now[slot] = pack.getItem(slot).getItem();
+
+		Item[] before = seen.get(id);
+		if (before != null && Arrays.equals(before, now)) return;
+
+		seen.put(id, now);
+
+		// Only after the first look, which is just this map catching up with a lock loaded from
+		// disk or set a moment ago. Nothing has changed yet at that point.
+		if (before == null) return;
+
+		locks.put(id, moved(learn(pack, plan), before, now));
+		this.setDirty();
+	}
+
+	/**
+	 * A slot emptied because its contents went to another slot is not a slot waiting to be
+	 * refilled.
+	 *
+	 * <p>Without this, dragging the pickaxe two slots left leaves a pickaxe slot behind it, and
+	 * the next sort dutifully fills the hole with the second-best pickaxe. The player asked for
+	 * their pickaxe to be somewhere else, not for two of them.
+	 *
+	 * <p>Told apart from a tool that broke by where the item went: a break leaves the hotbar with
+	 * one fewer of that kind, and a move does not.
+	 */
+	private static List<Lock> moved(List<Lock> plan, Item[] before, Item[] now) {
+		for (int slot = 0; slot < plan.size(); slot++) {
+			if (now[slot] != Items.AIR || before[slot] == Items.AIR) continue;
+
+			Lock vacated = lockFor(new ItemStack(before[slot]));
+
+			for (int other = 0; other < now.length; other++) {
+				if (other == slot || now[other] == Items.AIR) continue;
+				if (!lockFor(new ItemStack(now[other])).equals(vacated)) continue;
+				// Somewhere it was not a moment ago, so this is where it went.
+				if (before[other] != Items.AIR && lockFor(new ItemStack(before[other])).equals(vacated)) continue;
+
+				plan.set(slot, Lock.FREE);
+				break;
+			}
+		}
+		return plan;
+	}
+
+	/** Nothing to shortcut for somebody who has left. */
+	public void forgetSeen(UUID player) {
+		seen.remove(player);
 	}
 
 	/**
@@ -151,6 +236,7 @@ public final class HotbarLocks extends SavedData {
 		} else {
 			refill(pack, plan);
 			locks.put(player.getUUID(), learn(pack, plan));
+			seen.remove(player.getUUID());
 			this.setDirty();
 		}
 		pack.setChanged();
@@ -221,10 +307,15 @@ public final class HotbarLocks extends SavedData {
 				continue;
 			}
 
-			HotbarRole role = HotbarRole.of(stack);
-			plan.add(role != null ? new Lock(role, null) : new Lock(null, idOf(stack)));
+			plan.add(lockFor(stack));
 		}
 		return plan;
+	}
+
+	/** What a slot holding this is a slot for. */
+	private static Lock lockFor(ItemStack stack) {
+		HotbarRole role = HotbarRole.of(stack);
+		return role != null ? new Lock(role, null) : new Lock(null, idOf(stack));
 	}
 
 	/** Whichever of these fills the role best, searching from {@code first} to the end of the pack. */

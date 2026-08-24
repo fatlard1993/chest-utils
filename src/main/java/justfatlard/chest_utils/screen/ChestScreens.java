@@ -58,7 +58,7 @@ public final class ChestScreens {
 		// runs down the left, the recipe-book toggle and map-plus-plus's two slots fill the row
 		// at y=62, and the crafting label stops well short of here.
 		slots.registerButton(me, "sort_inv", 155, 6, BUTTON_SIZE, GLYPH_SORT);
-		slots.onButton(me, "sort_inv", ChestScreens::sortPack);
+		slots.onButton(me, "sort_inv", justfatlard.chest_utils.action.PackSort::sort);
 
 		// Beside it, in the one gap left between the crafting label and the sort button: which of
 		// the two things sorting does to the hotbar.
@@ -79,17 +79,6 @@ public final class ChestScreens {
 
 		screens.onClose(SCREEN_ID, looking::remove);
 		screens.onClose(SCREEN_TAKE_ONLY, looking::remove);
-	}
-
-	/**
-	 * Tidy a player's pack, hotbar last-word.
-	 *
-	 * <p>The hotbar is served first: it fills from the rows, so sorting the rows before it would
-	 * mean pulling stacks back out of a grid that was just put in order.
-	 */
-	private static void sortPack(ServerPlayer player) {
-		HotbarLocks.get(player).apply(player);
-		ChestActions.sortPack(player.getInventory());
 	}
 
 	/** Throw the switch, and say in words what the star on it now means. */
@@ -133,7 +122,7 @@ public final class ChestScreens {
 			case TOP_UP -> ChestActions.topUp(pack, packEnd, chest);
 			case TOP_OFF -> ChestActions.topUp(chest, chest.getContainerSize(), pack);
 			case EMPTY -> ChestActions.dump(chest, chest.getContainerSize(), pack);
-			case SORT_INVENTORY -> sortPack(player);
+			case SORT_INVENTORY -> justfatlard.chest_utils.action.PackSort.sort(player);
 		}
 	}
 
