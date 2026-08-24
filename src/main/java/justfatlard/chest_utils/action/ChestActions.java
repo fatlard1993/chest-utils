@@ -17,6 +17,11 @@ import net.minecraft.world.item.ItemStack;
  * or players, so the same code answers a button, a keybind, or a test. Each returns whether it
  * changed anything, which is what decides if the screen needs redrawing.
  *
+ * <p><b>Everything takes a range.</b> A player's inventory is not thirty-six slots, it is
+ * thirty-six plus what they are wearing and holding, all in one container. Working over the whole
+ * of it sorts a helmet off somebody's head and files it under m, and dumps their boots into a
+ * chest. The caller says which part is fair game.
+ *
  * <p>Stack limits are read from the container rather than the item. A chest on this server holds
  * more than sixty-four of a thing, and merging to the item's own limit would quietly split every
  * pile back down to vanilla sizes - a sort that costs you slots is not a tidy-up.
@@ -24,17 +29,22 @@ import net.minecraft.world.item.ItemStack;
 public final class ChestActions {
 	private ChestActions() {}
 
+	/** Merge and order a whole container. */
+	public static boolean sort(Container container) {
+		return sort(container, 0, container.getContainerSize());
+	}
+
 	/**
-	 * Merge and order a container in place.
+	 * Merge and order part of a container, in place.
 	 *
 	 * <p>By registry id, so the order is the same every time and two chests of the same things
-	 * read the same way. Sorting by display name would put the order at the mercy of the language
-	 * the server happens to be running in.
+	 * read the same way. Sorting by display name would put the order at the mercy of whichever
+	 * language the server happens to be running in.
 	 */
-	public static boolean sort(Container container) {
+	public static boolean sort(Container container, int from, int to) {
 		List<ItemStack> gathered = new ArrayList<>();
 
-		for (int slot = 0; slot < container.getContainerSize(); slot++) {
+		for (int slot = from; slot < to; slot++) {
 			ItemStack stack = container.getItem(slot);
 			if (!stack.isEmpty()) gathered.add(stack.copy());
 		}
@@ -46,8 +56,9 @@ public final class ChestActions {
 			.thenComparing(ItemStack::getCount, Comparator.reverseOrder()));
 
 		boolean changed = false;
-		for (int slot = 0; slot < container.getContainerSize(); slot++) {
-			ItemStack next = slot < merged.size() ? merged.get(slot) : ItemStack.EMPTY;
+		for (int slot = from; slot < to; slot++) {
+			int index = slot - from;
+			ItemStack next = index < merged.size() ? merged.get(index) : ItemStack.EMPTY;
 			if (!ItemStack.matches(container.getItem(slot), next)) changed = true;
 			container.setItem(slot, next);
 		}
@@ -55,42 +66,32 @@ public final class ChestActions {
 		return changed;
 	}
 
-	/**
-	 * Tip the chest into the player's pack.
-	 *
-	 * <p>The same move as {@link #dump} with the ends swapped, named separately because that is
-	 * what the button says and a reader should not have to work out which way round the arguments
-	 * went.
-	 */
-	public static boolean empty(Container chest, Container pack) {
-		return move(chest, pack, null);
-	}
-
-	/** Everything that will fit, from one container into another. */
-	public static boolean dump(Container from, Container into) {
-		return move(from, into, null);
+	/** Everything in the range that will fit, into the other container. */
+	public static boolean dump(Container from, int fromTo, Container into) {
+		return move(from, fromTo, into, null);
 	}
 
 	/**
-	 * Only the kinds already in there, from one container into another.
+	 * Only the kinds already in the destination.
 	 *
-	 * <p>The one that gets used most: back from a trip, drop off what belongs in this chest and
-	 * keep the rest. Deciding what belongs by what is already there needs no configuring and no
-	 * filters to maintain.
+	 * <p>The one that gets used most, in both directions: coming back from a trip it drops off
+	 * what belongs in this chest and keeps the rest; pointed the other way it refills the stacks
+	 * already in your pack and leaves the rest of the loot where it is. Deciding what belongs by
+	 * what is already there needs no configuring and no filters to maintain.
 	 */
-	public static boolean topUp(Container from, Container into) {
+	public static boolean topUp(Container from, int fromTo, Container into) {
 		Set<Item> wanted = new HashSet<>();
 		for (int slot = 0; slot < into.getContainerSize(); slot++) {
 			ItemStack stack = into.getItem(slot);
 			if (!stack.isEmpty()) wanted.add(stack.getItem());
 		}
-		return wanted.isEmpty() ? false : move(from, into, wanted);
+		return !wanted.isEmpty() && move(from, fromTo, into, wanted);
 	}
 
-	private static boolean move(Container from, Container into, Set<Item> only) {
+	private static boolean move(Container from, int fromTo, Container into, Set<Item> only) {
 		boolean moved = false;
 
-		for (int slot = 0; slot < from.getContainerSize(); slot++) {
+		for (int slot = 0; slot < fromTo; slot++) {
 			ItemStack stack = from.getItem(slot);
 			if (stack.isEmpty()) continue;
 			if (only != null && !only.contains(stack.getItem())) continue;

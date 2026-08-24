@@ -70,21 +70,39 @@ public final class ChestScreens {
 		if (chest == null) return;
 
 		Container pack = player.getInventory();
+		// Everything a player owns lives in one container, worn gear included. PACK_SLOTS is
+		// where the part they can rummage through ends.
+		int packEnd = net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE;
+
 		switch (action) {
 			case SORT -> ChestActions.sort(chest);
-			case DUMP -> ChestActions.dump(pack, chest);
-			case TOP_UP -> ChestActions.topUp(pack, chest);
-			case TOP_OFF -> ChestActions.topUp(chest, pack);
-			case EMPTY -> ChestActions.empty(chest, pack);
-			case SORT_INVENTORY -> ChestActions.sort(pack);
+			case DUMP -> ChestActions.dump(pack, packEnd, chest);
+			case TOP_UP -> ChestActions.topUp(pack, packEnd, chest);
+			case TOP_OFF -> ChestActions.topUp(chest, chest.getContainerSize(), pack);
+			case EMPTY -> ChestActions.dump(chest, chest.getContainerSize(), pack);
+			case SORT_INVENTORY -> ChestActions.sort(pack, 0, packEnd);
 		}
 	}
 
 	/** Wide enough for nine columns and a column of buttons beside them. */
 	private static final int WIDTH = 220;
-	private static final int BUTTON_X = 174;
-	private static final int BUTTON_W = 40;
-	private static final int BUTTON_H = 12;
+	private static final int BUTTON_X = 178;
+
+	/**
+	 * Square, and small. A row of words was four labels wide and still clipped every one of them;
+	 * an arrow says the same thing in a sixteenth of the room, and the pair of directions is the
+	 * whole of what these do.
+	 *
+	 * <p>Solid arrows move everything, hollow ones move only what the far side already has. The
+	 * two shapes read apart at a glance, which a pair of words the same length never did.
+	 */
+	private static final int BUTTON_SIZE = 16;
+
+	private static final String GLYPH_SORT = "\u21C5";
+	private static final String GLYPH_ALL_IN = "\u2191";
+	private static final String GLYPH_MATCH_IN = "\u21E7";
+	private static final String GLYPH_ALL_OUT = "\u2193";
+	private static final String GLYPH_MATCH_OUT = "\u21E9";
 
 	/**
 	 * Lay out a chest of this many rows and hand back where the pack starts.
@@ -122,11 +140,11 @@ public final class ChestScreens {
 		ScreenBuilder screen = new ScreenBuilder(SCREEN_ID).container(rows * COLS, true);
 		int packY = layout(screen, title, rows);
 
-		button(screen, "sort", 18, "Sort");
-		button(screen, "topup", 34, "Top up");
-		button(screen, "dump", 50, "Dump");
-		button(screen, "empty", 66, "Empty");
-		button(screen, "sort_inv", packY, "Sort pack");
+		button(screen, "sort", 18, GLYPH_SORT);
+		button(screen, "dump", 38, GLYPH_ALL_IN);
+		button(screen, "topup", 56, GLYPH_MATCH_IN);
+		button(screen, "empty", 76, GLYPH_ALL_OUT);
+		button(screen, "sort_inv", packY, GLYPH_SORT);
 
 		PandoricalApi.screens().openContainer(player, screen.build(), container, Set.of());
 	}
@@ -144,9 +162,9 @@ public final class ChestScreens {
 		ScreenBuilder screen = new ScreenBuilder(SCREEN_TAKE_ONLY).container(rows * COLS, true);
 		int packY = layout(screen, title, rows);
 
-		button(screen, "top_off", 18, "Top off");
-		button(screen, "take_all", 34, "Take all");
-		button(screen, "sort_inv", packY, "Sort pack");
+		button(screen, "take_all", 18, GLYPH_ALL_OUT);
+		button(screen, "top_off", 38, GLYPH_MATCH_OUT);
+		button(screen, "sort_inv", packY, GLYPH_SORT);
 
 		PandoricalApi.screens().openContainer(player, screen.build(), container, Set.of());
 	}
@@ -154,6 +172,6 @@ public final class ChestScreens {
 	private static void button(ScreenBuilder screen, String id, int y, String label) {
 		Map<String, String> props = new LinkedHashMap<>();
 		props.put(ComponentType.PROP_LABEL, label);
-		screen.button(id, BUTTON_X, y, BUTTON_W, BUTTON_H, props);
+		screen.button(id, BUTTON_X, y, BUTTON_SIZE, BUTTON_SIZE, props);
 	}
 }
