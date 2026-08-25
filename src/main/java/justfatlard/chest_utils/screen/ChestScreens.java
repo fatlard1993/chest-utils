@@ -45,6 +45,11 @@ public final class ChestScreens {
 	private static final int SLOT = 18;
 	private static final int MARGIN = 8;
 
+	/** Where a header's text sits, and how tall a line of it is. */
+	private static final int TITLE_Y = 6;
+	private static final int LABEL_GAP = 10;
+	private static final int TEXT_HEIGHT = 9;
+
 	/** What each open screen is looking at, so a press knows what to act on. */
 	private static final Map<ServerPlayer, Container> looking = new WeakHashMap<>();
 
@@ -54,15 +59,16 @@ public final class ChestScreens {
 		// somewhere you have to open a chest to reach.
 		var slots = PandoricalApi.playerInventory();
 		Identifier me = Identifier.fromNamespaceAndPath("chest-utils", "chest-utils");
-		// Top right, the one corner of the vanilla panel nothing already claims: the armour
-		// runs down the left, the recipe-book toggle and map-plus-plus's two slots fill the row
-		// at y=62, and the crafting label stops well short of here.
-		slots.registerButton(me, "sort_inv", 155, 6, BUTTON_SIZE, GLYPH_SORT);
+		// The vanilla panel has a header row too - "Crafting", ending around x=137 - and the
+		// same rule applies here as on our own screens: small buttons laid back from the right
+		// margin, centred on that line. At twelve they clear the label and stop well above the
+		// crafting result slot below them.
+		slots.registerButton(me, "sort_inv", 156, 4, BUTTON_SIZE, GLYPH_SORT);
 		slots.onButton(me, "sort_inv", justfatlard.chest_utils.action.PackSort::sort);
 
 		// Beside it, in the one gap left between the crafting label and the sort button: which of
 		// the two things sorting does to the hotbar.
-		slots.registerButton(me, "lock_hotbar", 137, 6, BUTTON_SIZE, GLYPH_UNLOCKED);
+		slots.registerButton(me, "lock_hotbar", 142, 4, BUTTON_SIZE, GLYPH_UNLOCKED);
 		slots.onButton(me, "lock_hotbar", ChestScreens::toggleLock);
 
 		var screens = PandoricalApi.screens();
@@ -126,19 +132,33 @@ public final class ChestScreens {
 		}
 	}
 
-	/** Wide enough for nine columns and a column of buttons beside them. */
-	private static final int WIDTH = 220;
-	private static final int BUTTON_X = 178;
+	/**
+	 * Vanilla's own width. The screen used to be widened to 220 to carry a column of buttons
+	 * down the side, which bought the buttons a home at the cost of every chest on the server
+	 * being visibly the wrong shape. The room was there all along: a header row is one short
+	 * word and eighty pixels of empty panel, and buttons small enough to sit on that line cost
+	 * no width at all.
+	 */
+	private static final int WIDTH = MARGIN + COLS * SLOT + MARGIN;
+
+	/** Right edge the button rows are laid back from. */
+	private static final int BUTTON_RIGHT = WIDTH - MARGIN;
 
 	/**
-	 * Square, and small. A row of words was four labels wide and still clipped every one of them;
-	 * an arrow says the same thing in a sixteenth of the room, and the pair of directions is the
-	 * whole of what these do.
+	 * Square, and small enough to sit on a line of text.
+	 *
+	 * <p>A row of words was four labels wide and still clipped every one of them; an arrow says
+	 * the same thing in a fraction of the room, and the pair of directions is the whole of what
+	 * these do. Twelve pixels is a shade taller than the nine a line of text stands in, so a
+	 * button reads as belonging to the header beside it rather than floating near it.
 	 *
 	 * <p>Solid arrows move everything, hollow ones move only what the far side already has. The
 	 * two shapes read apart at a glance, which a pair of words the same length never did.
 	 */
-	private static final int BUTTON_SIZE = 16;
+	private static final int BUTTON_SIZE = 12;
+
+	/** Enough that two glyphs do not read as one control. */
+	private static final int BUTTON_GAP = 2;
 
 	private static final String GLYPH_SORT = "\u21C5";
 
@@ -156,10 +176,10 @@ public final class ChestScreens {
 	/**
 	 * Lay out a chest of this many rows and hand back where the pack starts.
 	 *
-	 * <p>Nine columns of slots is 162 pixels and the vanilla chest is 176 wide, which leaves no
-	 * room beside them for anything to press. So the screen is widened rather than the buttons
-	 * squeezed: four labels crammed into the title row is how they came out as "Sor..." and
-	 * "Emp...", which says nothing at all.
+	 * <p>Nine columns of slots is 162 pixels of a 176-wide panel, so there is no room beside the
+	 * grid for anything to press - but there is a whole header row above each grid carrying one
+	 * short word, and the rest of that line is empty panel. The buttons go there, laid back from
+	 * the right margin, which is why this screen is exactly the width a chest has always been.
 	 */
 	private static int layout(ScreenBuilder screen, Component title, int rows) {
 		int chestSlots = rows * COLS;
@@ -168,14 +188,37 @@ public final class ChestScreens {
 
 		screen.size(WIDTH, height);
 		screen.panel("bg", 0, 0, WIDTH, height, Map.of("border", "beveled"));
-		screen.text("title", MARGIN, 6, Map.of("text", title.getString(), "color", "#404040"));
+		screen.text("title", MARGIN, TITLE_Y, Map.of("text", title.getString(), "color", "#404040"));
 
 		screen.inventoryGrid("chest", MARGIN, 18, rows, COLS, 0);
-		screen.text("pack_label", MARGIN, packY - 10, Map.of("text", "Inventory", "color", "#404040"));
+		screen.text("pack_label", MARGIN, packY - LABEL_GAP, Map.of("text", "Inventory", "color", "#404040"));
 		screen.inventoryGrid("pack", MARGIN, packY, 3, COLS, chestSlots);
 		screen.inventoryGrid("hotbar", MARGIN, packY + 3 * SLOT + 4, 1, COLS, chestSlots + 27);
 
 		return packY;
+	}
+
+	/**
+	 * A row of buttons laid back from the right margin, centred on a line of text.
+	 *
+	 * <p>Right to left in the order given, so the first one named sits furthest out and the row
+	 * grows inward towards the header it belongs to. Laid back from the edge rather than forward
+	 * from the label because the label is the part whose width nobody controls: a chest somebody
+	 * named gets a longer title, and a row anchored to the margin simply meets it later.
+	 *
+	 * @param textY the y the header text was drawn at
+	 */
+	private static void buttonRow(ScreenBuilder screen, int textY, String... idsAndGlyphs) {
+		// Twelve pixels against nine of text: half the difference puts one on the other's centre.
+		int y = textY - (BUTTON_SIZE - TEXT_HEIGHT) / 2;
+		int x = BUTTON_RIGHT - BUTTON_SIZE;
+
+		for (int i = 0; i < idsAndGlyphs.length; i += 2) {
+			Map<String, String> props = new LinkedHashMap<>();
+			props.put(ComponentType.PROP_LABEL, idsAndGlyphs[i + 1]);
+			screen.button(idsAndGlyphs[i], x, y, BUTTON_SIZE, BUTTON_SIZE, props);
+			x -= BUTTON_SIZE + BUTTON_GAP;
+		}
 	}
 
 	/**
@@ -189,11 +232,15 @@ public final class ChestScreens {
 		ScreenBuilder screen = new ScreenBuilder(SCREEN_ID).container(rows * COLS, true);
 		int packY = layout(screen, title, rows);
 
-		button(screen, "sort", 18, GLYPH_SORT);
-		button(screen, "dump", 38, GLYPH_ALL_IN);
-		button(screen, "topup", 56, GLYPH_MATCH_IN);
-		button(screen, "empty", 76, GLYPH_ALL_OUT);
-		button(screen, "sort_inv", packY, GLYPH_SORT);
+		// Beside the chest's own name: what can be done to the chest.
+		buttonRow(screen, TITLE_Y,
+			"empty", GLYPH_ALL_OUT,
+			"topup", GLYPH_MATCH_IN,
+			"dump", GLYPH_ALL_IN,
+			"sort", GLYPH_SORT);
+
+		// Beside "Inventory": the one thing that acts on the pack.
+		buttonRow(screen, packY - LABEL_GAP, "sort_inv", GLYPH_SORT);
 
 		PandoricalApi.screens().openContainer(player, screen.build(), container, Set.of());
 	}
@@ -211,16 +258,13 @@ public final class ChestScreens {
 		ScreenBuilder screen = new ScreenBuilder(SCREEN_TAKE_ONLY).container(rows * COLS, true);
 		int packY = layout(screen, title, rows);
 
-		button(screen, "take_all", 18, GLYPH_ALL_OUT);
-		button(screen, "top_off", 38, GLYPH_MATCH_OUT);
-		button(screen, "sort_inv", packY, GLYPH_SORT);
+		buttonRow(screen, TITLE_Y,
+			"top_off", GLYPH_MATCH_OUT,
+			"take_all", GLYPH_ALL_OUT);
+
+		buttonRow(screen, packY - LABEL_GAP, "sort_inv", GLYPH_SORT);
 
 		PandoricalApi.screens().openContainer(player, screen.build(), container, Set.of());
 	}
 
-	private static void button(ScreenBuilder screen, String id, int y, String label) {
-		Map<String, String> props = new LinkedHashMap<>();
-		props.put(ComponentType.PROP_LABEL, label);
-		screen.button(id, BUTTON_X, y, BUTTON_SIZE, BUTTON_SIZE, props);
-	}
 }
