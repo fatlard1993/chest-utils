@@ -134,9 +134,37 @@ def write_png(path, rows):
         f.write(png)
     print("wrote %s (%dx%d)" % (path, width, height))
 
+def luma(r, g, b):
+    return 0.299 * r + 0.587 * g + 0.114 * b
+
+
+# The chest's own planks, averaged. Multiply can only ever darken, so this is what a dye has to
+# be measured against: not how bright the dye looks, but how much of this it actually removes.
+WOOD_MEAN = (113, 82, 35)
+
+# A dye that leaves the wood this close to its original brightness has not tinted it at all.
+# Of the sixteen only white is over the line - it came out at 85 against the wood's 86, which
+# is to say a white chest was the vanilla chest to the pixel. Brown, cyan and green all sit
+# above the wood in raw brightness and still darken it properly, which is why the test is on
+# the result and not on the dye.
+NO_EFFECT = 0.9
+
+# How far a pale dye pulls the wood towards itself. Not all the way: at 1.0 the planks come out
+# a flat white card with the grain scrubbed off, and the grain is the reason these are tinted
+# rather than replaced. Two thirds reads as whitewashed and still has wood under it.
+BLEACH = 0.66
+
+
 def tint(rows, colour):
-    """Multiply every wooden pixel by the dye, keeping its own light and shade."""
+    """Colour every wooden pixel, keeping its own light and shade.
+
+    Dyes darker than the wood multiply, which is what keeps the grain, the shadow under the lid
+    and the iron where they are. A dye lighter than the wood cannot darken it into being that
+    colour, so it lightens towards it instead - the same idea run the other way.
+    """
     cr, cg, cb = colour
+    mr, mg, mb = WOOD_MEAN
+    pale = luma(mr * cr / 255, mg * cg / 255, mb * cb / 255) > luma(mr, mg, mb) * NO_EFFECT
     out = []
     for row in rows:
         line = []
@@ -145,7 +173,14 @@ def tint(rows, colour):
             if a == 0 or is_fitting(r, g, b):
                 line.append((r, g, b, a))
                 continue
-            line.append((r * cr // 255, g * cg // 255, b * cb // 255, a))
+            if pale:
+                line.append((
+                    int(r + (cr - r) * BLEACH),
+                    int(g + (cg - g) * BLEACH),
+                    int(b + (cb - b) * BLEACH),
+                    a))
+            else:
+                line.append((r * cr // 255, g * cg // 255, b * cb // 255, a))
         out.append(line)
     return out
 
