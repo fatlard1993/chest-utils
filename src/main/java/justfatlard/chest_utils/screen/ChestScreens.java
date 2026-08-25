@@ -77,6 +77,7 @@ public final class ChestScreens {
 		screens.onAction(SCREEN_ID, "dump", (player, data) -> act(player, Action.DUMP));
 		screens.onAction(SCREEN_ID, "topup", (player, data) -> act(player, Action.TOP_UP));
 		screens.onAction(SCREEN_ID, "empty", (player, data) -> act(player, Action.EMPTY));
+		screens.onAction(SCREEN_ID, "top_off", (player, data) -> act(player, Action.TOP_OFF));
 		screens.onAction(SCREEN_ID, "sort_inv", (player, data) -> act(player, Action.SORT_INVENTORY));
 
 		screens.onAction(SCREEN_TAKE_ONLY, "take_all", (player, data) -> act(player, Action.EMPTY));
@@ -232,8 +233,11 @@ public final class ChestScreens {
 		ScreenBuilder screen = new ScreenBuilder(SCREEN_ID).container(rows * COLS, true);
 		int packY = layout(screen, title, rows);
 
-		// Beside the chest's own name: what can be done to the chest.
+		// Beside the chest's own name: what can be done to the chest. Both directions of both
+		// moves - all of it, or only what the far side already has - so the row reads as two
+		// pairs rather than three things and an odd one out.
 		buttonRow(screen, TITLE_Y,
+			"top_off", GLYPH_MATCH_OUT,
 			"empty", GLYPH_ALL_OUT,
 			"topup", GLYPH_MATCH_IN,
 			"dump", GLYPH_ALL_IN,
