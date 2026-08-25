@@ -45,6 +45,16 @@ public final class ChestScreens {
 	private static final int SLOT = 18;
 	private static final int MARGIN = 8;
 
+	/**
+	 * Just past the right edge of the vanilla panel, level with the hotbar row.
+	 *
+	 * <p>The hotbar starts at y=142 and is one slot tall, so this centres a twelve on eighteen.
+	 * Outside the panel because nine columns of slots leave nothing beside them, and the recipe
+	 * book opens to the left, so the right edge is the one side that stays clear.
+	 */
+	private static final int HOTBAR_BUTTON_X = 178;
+	private static final int HOTBAR_BUTTON_Y = 145;
+
 	/** Where a header's text sits, and how tall a line of it is. */
 	private static final int TITLE_Y = 6;
 	private static final int LABEL_GAP = 10;
@@ -66,9 +76,12 @@ public final class ChestScreens {
 		slots.registerButton(me, "sort_inv", 156, 4, BUTTON_SIZE, GLYPH_SORT);
 		slots.onButton(me, "sort_inv", justfatlard.chest_utils.action.PackSort::sort);
 
-		// Beside it, in the one gap left between the crafting label and the sort button: which of
-		// the two things sorting does to the hotbar.
-		slots.registerButton(me, "lock_hotbar", 142, 4, BUTTON_SIZE, GLYPH_UNLOCKED);
+		// Beside the hotbar, not beside the sort button. It is the hotbar's switch, and a control
+		// sitting against the row it governs needs less explaining than one in a corner: the row
+		// is the label. There is no room for it inside the panel - the hotbar spans the full nine
+		// columns - so it sits just off the right edge, level with the row.
+		slots.registerButton(me, "lock_hotbar", HOTBAR_BUTTON_X, HOTBAR_BUTTON_Y,
+			BUTTON_SIZE, GLYPH_UNLOCKED);
 		slots.onButton(me, "lock_hotbar", ChestScreens::toggleLock);
 
 		var screens = PandoricalApi.screens();
