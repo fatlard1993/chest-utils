@@ -23,7 +23,7 @@
 		"fabric-api": "${fabricApiVersion}",
 		"minecraft": "${minecraftDependency}",
 		"java": ">=25",
-		"pandorical": ">=1.7.0"
+		"pandorical": ">=1.1.0"
 	},
 	"mixins": [
 		"chest-utils.mixins.json"
