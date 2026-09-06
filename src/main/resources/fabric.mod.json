@@ -18,12 +18,15 @@
 			"justfatlard.chest_utils.Main"
 		]
 	},
-	"depends": {
+	"suggests": {
+    "block-tip": "*"
+  },
+  "depends": {
 		"fabricloader": ">=${loaderVersion}",
 		"fabric-api": "${fabricApiVersion}",
 		"minecraft": "${minecraftDependency}",
 		"java": ">=25",
-		"pandorical": ">=1.1.0"
+		"pandorical": ">=1.2.1"
 	},
 	"mixins": [
 		"chest-utils.mixins.json"

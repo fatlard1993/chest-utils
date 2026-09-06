@@ -138,33 +138,27 @@ def luma(r, g, b):
     return 0.299 * r + 0.587 * g + 0.114 * b
 
 
-# The chest's own planks, averaged. Multiply can only ever darken, so this is what a dye has to
-# be measured against: not how bright the dye looks, but how much of this it actually removes.
+# The chest's own planks, averaged, and that average's brightness. Dividing each pixel's
+# brightness by this turns the wood into a pure light-and-shade map centred on 1.0: grain,
+# lid shadow and edge highlights, with the brown taken out.
 WOOD_MEAN = (113, 82, 35)
+WOOD_MEAN_LUMA = luma(*WOOD_MEAN)
 
-# A dye that leaves the wood this close to its original brightness has not tinted it at all.
-# Of the sixteen only white is over the line - it came out at 85 against the wood's 86, which
-# is to say a white chest was the vanilla chest to the pixel. Brown, cyan and green all sit
-# above the wood in raw brightness and still darken it properly, which is why the test is on
-# the result and not on the dye.
-NO_EFFECT = 0.9
-
-# How far a pale dye pulls the wood towards itself. Not all the way: at 1.0 the planks come out
-# a flat white card with the grain scrubbed off, and the grain is the reason these are tinted
-# rather than replaced. Two thirds reads as whitewashed and still has wood under it.
-BLEACH = 0.66
+# Highlights brighter than the average plank are eased rather than applied raw, or a pale dye
+# clips them all to one flat value and the grain disappears exactly where the light falls.
+HIGHLIGHT_EASE = 0.6
 
 
 def tint(rows, colour):
-    """Colour every wooden pixel, keeping its own light and shade.
+    """Grayscale the wood into its light and shade, then re-light that in the dye's colour.
 
-    Dyes darker than the wood multiply, which is what keeps the grain, the shadow under the lid
-    and the iron where they are. A dye lighter than the wood cannot darken it into being that
-    colour, so it lightens towards it instead - the same idea run the other way.
+    The same trick vanilla's leather armour uses. Hue comes wholly from the dye and shading
+    wholly from the wood, so a blue chest is actually blue and a black one is black-wool black
+    rather than the void. The first cut multiplied dye against the brown planks instead, and the
+    planks' nearly-empty blue channel turned every cool dye into mud - a multiply against orange
+    can only ever make orange things.
     """
     cr, cg, cb = colour
-    mr, mg, mb = WOOD_MEAN
-    pale = luma(mr * cr / 255, mg * cg / 255, mb * cb / 255) > luma(mr, mg, mb) * NO_EFFECT
     out = []
     for row in rows:
         line = []
@@ -173,14 +167,14 @@ def tint(rows, colour):
             if a == 0 or is_fitting(r, g, b):
                 line.append((r, g, b, a))
                 continue
-            if pale:
-                line.append((
-                    int(r + (cr - r) * BLEACH),
-                    int(g + (cg - g) * BLEACH),
-                    int(b + (cb - b) * BLEACH),
-                    a))
-            else:
-                line.append((r * cr // 255, g * cg // 255, b * cb // 255, a))
+            grain = luma(r, g, b) / WOOD_MEAN_LUMA
+            if grain > 1.0:
+                grain = 1.0 + (grain - 1.0) * HIGHLIGHT_EASE
+            line.append((
+                min(255, int(cr * grain)),
+                min(255, int(cg * grain)),
+                min(255, int(cb * grain)),
+                a))
         out.append(line)
     return out
 

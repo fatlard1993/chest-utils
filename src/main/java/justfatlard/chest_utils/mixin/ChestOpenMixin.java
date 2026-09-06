@@ -2,6 +2,7 @@ package justfatlard.chest_utils.mixin;
 
 import justfatlard.chest_utils.screen.ChestScreens;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
@@ -44,6 +45,18 @@ public class ChestOpenMixin {
 		if (level.isClientSide() || !(player instanceof ServerPlayer serverPlayer)) return;
 		if (player.isSpectator()) return;
 
+		// The lock gate: somebody else's locked chest refuses the way vanilla's own
+		// keyed containers do, a knock and a word, and never shows a screen at all
+		var locks = justfatlard.chest_utils.block.ChestLocks.get((net.minecraft.server.level.ServerLevel) level);
+		if (locks.refuses(serverPlayer, state, pos)) {
+			serverPlayer.sendOverlayMessage(Component.literal(
+				"Locked by " + locks.lockedBy(state, pos)));
+			level.playSound(null, pos, net.minecraft.sounds.SoundEvents.CHEST_LOCKED,
+				net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+			cir.setReturnValue(InteractionResult.SUCCESS);
+			return;
+		}
+
 		Container container;
 		int rows;
 
@@ -59,7 +72,8 @@ public class ChestOpenMixin {
 		}
 		if (rows <= 0) return;
 
-		ChestScreens.open(serverPlayer, container, state.getBlock().getName(), rows);
+		ChestScreens.open(serverPlayer, container, state.getBlock().getName(), rows,
+			(net.minecraft.server.level.ServerLevel) level, pos);
 		cir.setReturnValue(InteractionResult.SUCCESS);
 	}
 }

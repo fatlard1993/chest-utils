@@ -61,11 +61,38 @@ public final class DyeInteraction {
 		String colour = colourOf(held);
 		if (colour == null) return InteractionResult.PASS;
 
+		// Painting is the sneaking gesture, so an ordinary click still opens the chest.
+		//
+		// Holding dye is not an intention to paint. A chest is opened far more often than it is
+		// recoloured, and dye is exactly the sort of thing that is in your hand because you were
+		// doing something else with it - so a plain right-click has to keep meaning "open", or
+		// carrying dye quietly turns every chest into a paint pot. Sneaking already means "act on
+		// the block rather than use it" everywhere else in the game, and vanilla passes a sneaking
+		// click straight through to the held item, which is where this is standing.
+		if (!player.isShiftKeyDown()) return InteractionResult.PASS;
+
+		// A lock covers the paint as well as the lid. It always guarded opening and breaking, and
+		// left this third way in open: anyone could walk up to a locked chest and recolour it,
+		// which is not theft but is somebody else's chest changed by a hand that has no claim on
+		// it. Checked before the dye is spent, so a refusal costs the dye nothing.
+		ChestLocks locks = ChestLocks.get(serverLevel);
+		if (locks.refuses(serverPlayer, level.getBlockState(pos), pos, ChestLocks.Use.ALTER)) {
+			serverPlayer.sendOverlayMessage(net.minecraft.network.chat.Component.literal(
+				"Locked by " + locks.lockedBy(level.getBlockState(pos), pos)));
+			level.playSound(null, pos, net.minecraft.sounds.SoundEvents.CHEST_LOCKED,
+				net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+			return InteractionResult.FAIL;
+		}
+
 		DyedChests painted = DyedChests.get(serverLevel);
-		if (colour.equals(painted.colourAt(pos))) return InteractionResult.PASS;
+		String previous = painted.colourAt(pos);
+		if (colour.equals(previous)) return InteractionResult.PASS;
 
 		painted.paint(serverLevel, pos, colour);
 		if (!player.isCreative()) held.shrink(1);
+		// Repainting scrapes the old coat off whole: the previous dye pops back out, so a
+		// recolour costs one dye and not two
+		if (previous != null) giveBack(serverLevel, pos, previous);
 
 		level.playSound(null, pos, net.minecraft.sounds.SoundEvents.DYE_USE,
 			net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);

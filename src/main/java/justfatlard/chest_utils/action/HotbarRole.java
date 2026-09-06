@@ -9,6 +9,9 @@ import net.minecraft.world.item.ItemStack;
 /**
  * The jobs a hotbar slot can be held for, in the order a hand reaches for them.
  *
+ * <p>The declaration order is the layout: {@code arrange} fills the hotbar from the left in this
+ * order, so moving a constant up moves that tool's slot.
+ *
  * <p>A role is a category deep enough that any member of it will do: a slot kept for a pickaxe
  * wants <em>a</em> pickaxe, and getting the best one you own is an upgrade rather than a
  * surprise. Everything else a hotbar carries - torches, blocks, buckets - is wanted exactly, and
@@ -19,6 +22,20 @@ import net.minecraft.world.item.ItemStack;
  * this suite already do.
  */
 public enum HotbarRole {
+	/**
+	 * First, so it lands in slot one.
+	 *
+	 * <p>The order here is the order the slots are filled in, and a bow earns the first of them:
+	 * it is the one tool whose moment is decided by something else - a creeper closing, a skeleton
+	 * across a ravine - where every other slot is reached for when its owner chooses to. Fumbling
+	 * to it is the only fumble that costs hearts.
+	 *
+	 * <p>Matched on the bow-enchantable tag because vanilla has no "these are bows" tag and that
+	 * one holds exactly {@code minecraft:bow}. Crossbows keep their own tag and are deliberately
+	 * not folded in: they are reloaded rather than drawn, and a slot that might hold either is a
+	 * slot you have to look at.
+	 */
+	BOW(ItemTags.BOW_ENCHANTABLE),
 	SWORD(ItemTags.SWORDS),
 	PICKAXE(ItemTags.PICKAXES),
 	AXE(ItemTags.AXES),
