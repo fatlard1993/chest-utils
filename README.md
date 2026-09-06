@@ -114,7 +114,7 @@ Where [Loot Ender](https://github.com/fatlard1993/loot-ender) is installed, your
 
 Chest Utils runs server-side, and [Pandorical](https://github.com/fatlard1993/pandorical) is required: the server will not load this mod without it. Every screen, button, glyph and chest colour here is declared through Pandorical and drawn by it.
 
-No Chest Utils jar is needed on a client. A player needs Pandorical and nothing else.
+No Chest Utils jar is needed on a client. A player needs Pandorical and nothing else; the wheel-and-drag container habits that used to ride in this jar are Pandorical's now, on its own settings page.
 
 ## Development
 

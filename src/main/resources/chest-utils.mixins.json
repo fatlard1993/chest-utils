@@ -1,15 +1,12 @@
 {
-  "required": true,
-  "package": "justfatlard.chest_utils.mixin",
-  "compatibilityLevel": "JAVA_25",
-  "mixins": [
-    "ChestOpenMixin",
-    "MinecartOpenMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  },
-  "client": [
-    "MouseTweaksMixin"
-  ]
+	"required": true,
+	"package": "justfatlard.chest_utils.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"mixins": [
+		"ChestOpenMixin",
+		"MinecartOpenMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
 }
