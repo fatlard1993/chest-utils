@@ -57,6 +57,10 @@ public class ChestOpenMixin {
 			return;
 		}
 
+		// A client that cannot draw Pandorical's screens gets vanilla's: Pandorical declines to
+		// open one for it, and answering the click here as well left the chest shut.
+		if (!ChestScreens.canShow(serverPlayer)) return;
+
 		Container container;
 		int rows;
 

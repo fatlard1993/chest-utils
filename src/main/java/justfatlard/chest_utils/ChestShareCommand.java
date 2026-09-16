@@ -124,6 +124,10 @@ public final class ChestShareCommand {
 			throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		Target target = look(context.getSource());
 		if (target == null) return 0;
+		if (target.locks().refuses(target.player(), target.state(), target.pos())) {
+			context.getSource().sendFailure(Component.literal("Only somebody who can open that chest can ask who else can"));
+			return 0;
+		}
 
 		ChestLocks.Lock lock = target.lock();
 		StringBuilder line = new StringBuilder(lock.isPublic() ? "Public, locked by " : "Locked by ")

@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 /**
  * {@code /hotbar} says what the sort thinks each slot is for.
  *
- * <p>The star beside the sort button says whether the hotbar is locked, but not what it is locked
+ * <p>The star beside the hotbar says whether it is locked, but not what it is locked
  * <em>to</em> - and a slot's job is invisible until the sort fills it with something unexpected.
  * This is the answer to "why did it do that".
  */
@@ -31,7 +31,7 @@ public final class HotbarCommand {
 
 		if (plan.isEmpty()) {
 			return said(player, "Hotbar unlocked - sorting lays it out by the default rules."
-				+ " The star beside the sort button locks it to what you have.");
+				+ " The star beside the hotbar locks it to what you have.");
 		}
 
 		StringBuilder line = new StringBuilder();

@@ -46,6 +46,7 @@ public interface MinecartOpenMixin {
 		Entity entity = (Entity) this;
 		if (entity.level().isClientSide() || !(player instanceof ServerPlayer serverPlayer)) return;
 		if (player.isSpectator()) return;
+		if (!ChestScreens.canShow(serverPlayer)) return;
 
 		int rows = self.getContainerSize() / 9;
 		if (rows <= 0) return;

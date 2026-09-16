@@ -118,6 +118,11 @@ public final class ChestScreens {
 
 	private static final Map<ServerPlayer, Search> searches = new WeakHashMap<>();
 
+	/** Whether this player's client can draw the chest screen; otherwise it keeps vanilla's. */
+	public static boolean canShow(ServerPlayer player) {
+		return PandoricalApi.hasCapability(player, justfatlard.pandorical.api.Capabilities.SCREENS);
+	}
+
 	public static void register() {
 		// On the player's own screen too. Tidying your pack is wanted standing in a field, not
 		// only while looking into somebody's chest, and the button that does it should not be
@@ -478,7 +483,9 @@ public final class ChestScreens {
 		// Search sits outermost: it is the one press that takes the whole row with it, and
 		// the cross that brings the row back appears in exactly its place.
 		List<String> row;
-		if (level != null && pos != null) {
+		boolean lockHere = level != null && pos != null && (!justfatlard.chest_utils.block.ChestLocks.lockingRefused(level, pos)
+			|| justfatlard.chest_utils.block.ChestLocks.get(level).lockAt(pos) != null);
+		if (lockHere) {
 			lockable.put(player, new LockTarget(level, pos, screen.screenId()));
 			row = buttonRow(screen, TITLE_Y,
 				SEARCH, ICON_SEARCH,
@@ -527,6 +534,10 @@ public final class ChestScreens {
 		}
 
 		var was = locks.lockAt(target.pos());
+		if (was == null && justfatlard.chest_utils.block.ChestLocks.lockingRefused(target.level(), target.pos())) {
+			player.sendOverlayMessage(Component.literal("Chests can't be locked here"));
+			return;
+		}
 		String said;
 		if (was == null) {
 			locks.lock(player, state, target.pos());

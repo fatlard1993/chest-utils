@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiPredicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.UUIDUtil;
@@ -134,6 +136,24 @@ public final class ChestLocks extends SavedData {
 
 	public static ChestLocks get(ServerLevel level) {
 		return level.getDataStorage().computeIfAbsent(TYPE);
+	}
+
+	/** Places another mod has said no chest is locked: an arena where taking from a chest is the game. */
+	private static final List<BiPredicate<ServerLevel, BlockPos>> NO_LOCKING = new CopyOnWriteArrayList<>();
+
+	/**
+	 * For another mod, by reflection if it likes: a chest where {@code where} says so gets no lock
+	 * switch, and a lock already on it stays until its owner takes it off.
+	 */
+	public static void refuseLocking(BiPredicate<ServerLevel, BlockPos> where) {
+		NO_LOCKING.add(where);
+	}
+
+	public static boolean lockingRefused(ServerLevel level, BlockPos pos) {
+		for (BiPredicate<ServerLevel, BlockPos> where : NO_LOCKING) {
+			if (where.test(level, pos)) return true;
+		}
+		return false;
 	}
 
 	/**

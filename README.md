@@ -6,7 +6,7 @@ A Minecraft Fabric mod. Dyed chests, and the buttons a chest should always have 
 
 Two things, both about the time spent moving items rather than the items themselves.
 
-**Every chest gets four buttons** down its right-hand side: sort what is in it, dump your pack into it, top up only the stacks it already has, or empty it into your pack. Your own inventory screen gets a sort button too, because tidying your pack is wanted standing in a field and not only while looking into somebody's chest.
+**Every chest gets a row of buttons** beside its name: sort what is in it, dump your pack into it, top up only the stacks it already has, empty it into your pack, or top off your own part-used stacks from it. Barrels, chest minecarts and chest boats get the same row. Your own inventory screen gets a sort button too, because tidying your pack is wanted standing in a field and not only while looking into somebody's chest.
 
 **Chests can be painted.** Sixteen colours, applied with a dye you already have to a chest already placed. No recipe, no new item, no emptying and replacing the chest to recolour it.
 
@@ -22,6 +22,7 @@ Solid arrows move everything. Outline arrows move only what the far side already
 | Dump (solid up) | Everything from your pack into the chest |
 | Top up (outline up) | Only into stacks the chest already has |
 | Empty (solid down) | Everything from the chest into your pack |
+| Top off (outline down) | Only into stacks your pack already has |
 | Search (magnifier) | Swap the row for a search field |
 
 Search takes the row's place with a field and a cross to bring the row back. Type, and every slot on the screen that does not match - chest, pack and hotbar alike - drops behind a dark veil, so what you are after is the thing still lit. A word matches an item's name or its id, so "log" finds Oak Log and "planks" finds every plank; more than one word has to match all of them. Items you move while searching are re-answered as they land.
@@ -30,12 +31,13 @@ A loot chest is a chest you can only take from, so it gets the pair pointing the
 
 The marks on the buttons are drawn pixel art, not font characters: at button size a unicode arrow is a one-pixel hairline, which reads as a web page next to vanilla's chunky widgets.
 
-Both screens also carry the inventory sort button, beside your own hotbar.
+Both screens also carry a sort button for your pack, on the line beside its "Inventory" label.
 
 ## The Lock
 
-The button beside a chest's name locks it: a locked chest can only be opened or broken by whoever
-locked it, or an op. No key item, no configuration - locking is a claim, sized for a server where
+The button beside a chest's name locks it: a locked chest can only be opened, broken or painted by
+whoever locked it, or an op. Barrels lock the same way; chest minecarts, chest boats and loot
+copies have no lock button. No key item, no configuration - locking is a claim, sized for a server where
 the threat model is housemates. A double chest locks as a whole (including a chest placed against
 a locked single later), and anyone refused is told whose lock it is.
 
@@ -44,8 +46,16 @@ break it, paint it, or change the lock. That is the community chest at spawn, wh
 be able to use and nobody should be able to walk off with. A third press unlocks it. The switch
 itself only ever answers to the owner or an op, whichever state it is in.
 
+The mods menu lists every chest you have locked, in every dimension, with an unlock beside each,
+so the one locked in a base three dimensions ago does not need walking back to.
+
 Hoppers still work a locked chest: the lock is against players, and automation is the owner's own
 plumbing.
+
+Some places have no lock switch at all: another mod can say a chest there is not to be locked, as
+[PvP Dimensions](https://github.com/fatlard1993/pvp-dimensions) does inside its arenas, where
+taking from the other team's chest is half the game. A lock put on before stays until its owner
+takes it off.
 
 ### Sharing one
 
@@ -72,19 +82,19 @@ empty.
 
 ## Drag And Scroll
 
-Hold the mouse down and drag across slots to send them all to the other side. Scroll over a slot to send that one. Neither picks the stack up, so nothing is left on the cursor when you close the screen.
+These come from Pandorical rather than this mod, so they work in any container screen on a Pandorical client. Drag across slots with an empty hand to send every stack you cross to the other side; drag with the right button to send one item from each. Scroll over a stack to send one item across: up from your pack, down from the chest. Neither leaves anything on the cursor when you close the screen. They are switched off from Pandorical's own settings page ("Wheel and drag move items").
 
 ## Sorting
 
 Sorting a pack is opinionated, so here is the opinion.
 
-**Order comes from the creative menu.** Not alphabetical, not by registry id - the same order the game already teaches you when you scroll a creative tab, taken from the tabs themselves at server start. Stone lands next to cobblestone because that is where the game has always put it. Ties fall back to name, then to stack size.
+**Order comes from the creative menu.** Not alphabetical, not by registry id - the same order the game already teaches you when you scroll a creative tab, taken from the tabs themselves at server start. Stone lands next to cobblestone because that is where the game has always put it. Ties fall back to the item's id, then to the larger stack.
 
-**The hotbar is not storage.** It is a set of controls: which key the pickaxe is under was decided once and is now reached for without looking. So sorting never rearranges it. What it does is refill it - the half-empty stack of torches in slot three simply becomes a full one. Positions are yours; quantities are the chore.
+**The hotbar is not storage.** It is a set of controls: which key the pickaxe is under was decided once and is now reached for without looking. So sorting never files it away with the rows above; it either lays the hotbar out by a fixed rule or keeps the one you made, as the hotbar lock below decides. Either way it refills it - the half-empty stack of torches in slot three simply becomes a full one. Positions are yours; quantities are the chore.
 
 ## The Hotbar Lock
 
-Beside the sort button on your own inventory screen is a star, and it is a switch. It says which of two things sorting does to your hotbar.
+Just off the right edge of your own inventory screen, level with the hotbar, is a star, and it is a switch. It says which of two things sorting does to your hotbar. The same switch is "Hotbar lock" in the mods menu, off to begin with.
 
 **☆ Unlocked.** Every sort lays the hotbar out by one rule: your best tools from the left in the order a hand reaches for them - bow, sword, pickaxe, axe, shovel, hoe - with missing ones sliding left so there are no holes, then torches, and your best food at the far end where a mis-scroll mid-fight will not put dinner in your hand. The bow leads because it is the one tool whose moment is chosen for you - a creeper closing, a skeleton across a ravine - and fumbling to it is the only fumble that costs hearts.
 
@@ -98,17 +108,17 @@ Nothing is ever moved *out* of a locked hotbar, and armour and offhand are never
 
 ## Painting A Chest
 
-Right-click a placed chest with any of the sixteen dyes. One dye per coat; painting a chest the colour it already is does nothing and keeps the dye.
-
-A water bucket strips the paint back off.
+Sneak and right-click a placed chest with any of the sixteen dyes; an ordinary right-click still opens it. One dye per coat; painting a chest the colour it already is does nothing and keeps the dye. Repainting gives the old dye back, so a recolour costs one dye and not two. A locked chest only takes paint from somebody who could break it.
 
 **Colour belongs to the placed chest, not to an item.** Break a painted chest and the dye comes back to you along with a plain chest, so there is no such thing as a coloured chest in your inventory and no sixteen extra items to carry.
 
-The colour is drawn by Pandorical. A client without it sees ordinary chests and loses nothing but the colour.
+The colour is drawn by Pandorical.
 
 ## Loot Ender
 
 Where [Loot Ender](https://github.com/fatlard1993/loot-ender) is installed, your private copy of a structure chest opens with the take-only buttons on it. Neither mod needs to know how the other builds a screen.
+
+Loot Ender's lockpicks leave the locks here alone unless its server config says otherwise: `pick_player_locks` is `never` by default.
 
 ## Pandorical
 

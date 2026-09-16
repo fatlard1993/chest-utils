@@ -140,7 +140,7 @@ public final class ChestActions {
 	 */
 	public static boolean topUp(Container from, int fromTo, Container into) {
 		Set<Item> wanted = new HashSet<>();
-		for (int slot = 0; slot < into.getContainerSize(); slot++) {
+		for (int slot = 0; slot < reachable(into); slot++) {
 			ItemStack stack = into.getItem(slot);
 			if (!stack.isEmpty()) wanted.add(stack.getItem());
 		}
@@ -171,8 +171,9 @@ public final class ChestActions {
 	/** Fill existing piles first, then take empty slots. Whatever is left comes back. */
 	private static ItemStack insert(Container into, ItemStack stack) {
 		ItemStack remaining = stack.copy();
+		int end = reachable(into);
 
-		for (int slot = 0; slot < into.getContainerSize() && !remaining.isEmpty(); slot++) {
+		for (int slot = 0; slot < end && !remaining.isEmpty(); slot++) {
 			ItemStack there = into.getItem(slot);
 			if (there.isEmpty() || !ItemStack.isSameItemSameComponents(there, remaining)) continue;
 
@@ -184,13 +185,22 @@ public final class ChestActions {
 			remaining.shrink(taken);
 		}
 
-		for (int slot = 0; slot < into.getContainerSize() && !remaining.isEmpty(); slot++) {
+		for (int slot = 0; slot < end && !remaining.isEmpty(); slot++) {
 			if (!into.getItem(slot).isEmpty()) continue;
 			into.setItem(slot, remaining.copy());
 			remaining = ItemStack.EMPTY;
 		}
 
 		return remaining;
+	}
+
+	/**
+	 * The slots a move may put things in. A player's inventory runs on past the pack into what
+	 * they wear, their offhand and two slots no screen shows them (a horse's armour and saddle),
+	 * and whatever a take-all did not fit in the pack used to land there, out of sight for good.
+	 */
+	private static int reachable(Container into) {
+		return into instanceof Inventory ? Inventory.INVENTORY_SIZE : into.getContainerSize();
 	}
 
 	private static List<ItemStack> merge(Container container, List<ItemStack> stacks) {
