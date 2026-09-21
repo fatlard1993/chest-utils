@@ -1,0 +1,18 @@
+{
+	"schemaVersion": 1,
+	"id": "chest-utils-gametest",
+	"version": "1.0.0",
+	"name": "Chest Utils smoke test",
+	"description": "Loads the mod, joins a world, and fails if anything on the way threw.",
+	"license": "MIT",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"justfatlard.chest_utils.gametest.SmokeTest"
+		]
+	},
+	"depends": {
+		"chest-utils": "*",
+		"fabric-client-gametest-api-v1": "*"
+	}
+}
