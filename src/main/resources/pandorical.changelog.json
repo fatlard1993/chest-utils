@@ -4,15 +4,21 @@
 	],
 	"versions": {
 		"1.1.0": [
-			"Shulker boxes get the same row of buttons as a chest, so one can be sorted, filled and emptied where it stands. A box with no room to swing its lid still refuses to open, and the piglins still take it personally."
+			"Shulker boxes get the same row of buttons as a chest, sorted and filled where they stand.",
+			"A box with no room to swing its lid still refuses to open, and the piglins take it personally."
 		],
 		"1.0.1": [
-			"A chest can be shared with somebody by command, and a take-all stops at the end of your pack instead of running on into armour, offhand and the slots no screen shows.",
-			"A vanilla client keeps vanilla's chest, and a server can set aside places where nothing is to be locked."
+			"A chest can be shared with somebody by command.",
+			"A take-all stops at the end of your pack, not in armour, offhand and unshown slots.",
+			"A vanilla client keeps vanilla's chest.",
+			"A server can set aside places where nothing is to be locked."
 		],
 		"1.0.0": [
-			"Sort, deposit, restock, take all and top up, on chests, barrels, chest minecarts and chest boats, with a sort button in your own inventory as well. Sorting fills the hotbar rather than tidying it, since a hotbar is a set of controls, and you can lock it.",
-			"Sixteen dyes paint a chest already placed, with no recipe, no new item and no emptying it first. The paint comes back off when the chest is broken."
+			"Sort, deposit, restock, take all and top up, on chests, barrels, chest minecarts and boats.",
+			"A sort button in your own inventory as well.",
+			"Sorting fills the hotbar rather than tidying it, and you can lock it.",
+			"Sixteen dyes paint a chest already placed: no recipe, no new item, no emptying it first.",
+			"The paint comes back off when the chest is broken."
 		]
 	}
 }
