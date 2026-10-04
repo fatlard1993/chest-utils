@@ -251,6 +251,35 @@ public final class ChestLocks extends SavedData {
 		return edited;
 	}
 
+	/**
+	 * For a mod that carries a chest somewhere else - a ship setting sail - the lock on this one
+	 * block, taken off it and handed over as data to be put back with {@link #restore} wherever the
+	 * chest ends up. Null for a block with no lock. A double chest is two calls, one a half, the
+	 * same as everything else here.
+	 */
+	public net.minecraft.nbt.@org.jspecify.annotations.Nullable Tag strip(BlockPos pos) {
+		Lock lock = this.locks.get(pos.asLong());
+		if (lock == null) return null;
+		// Written down before it comes off, so a lock that will not encode stays where it was.
+		net.minecraft.nbt.Tag carried = Lock.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, lock)
+			.resultOrPartial(problem -> justfatlard.chest_utils.Main.LOGGER.warn("Lock at {} kept in place: {}", pos, problem))
+			.orElse(null);
+		if (carried == null) return null;
+		this.locks.remove(pos.asLong());
+		this.setDirty();
+		return carried;
+	}
+
+	/** The lock from {@link #strip}, back on a block: wherever the chest it came off now stands. */
+	public void restore(BlockPos pos, net.minecraft.nbt.Tag carried) {
+		Lock.CODEC.parse(net.minecraft.nbt.NbtOps.INSTANCE, carried)
+			.resultOrPartial(problem -> justfatlard.chest_utils.Main.LOGGER.warn("Carried lock for {} dropped: {}", pos, problem))
+			.ifPresent(lock -> {
+				this.locks.put(pos.asLong(), lock);
+				this.setDirty();
+			});
+	}
+
 	/** Every locked block this player owns, half by half; a double chest is two of them. */
 	public Map<BlockPos, Lock> ownedBy(UUID owner) {
 		Map<BlockPos, Lock> out = new java.util.TreeMap<>();

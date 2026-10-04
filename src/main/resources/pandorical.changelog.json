@@ -3,6 +3,9 @@
 		"A row of buttons on every chest, sort, dump, restock, take all, and sixteen colours of paint for a chest that is already standing."
 	],
 	"versions": {
+		"1.1.1": [
+			"A locked chest carried aboard a Big Boats ship keeps its lock, at sea and wherever the ship docks."
+		],
 		"1.1.0": [
 			"Shulker boxes get the same row of buttons as a chest, sorted and filled where they stand.",
 			"A box with no room to swing its lid still refuses to open, and the piglins take it personally."
