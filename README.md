@@ -35,27 +35,15 @@ Both screens also carry a sort button for your pack, on the line beside its "Inv
 
 ## The Lock
 
-The button beside a chest's name locks it: a locked chest can only be opened, broken or painted by
-whoever locked it, or an op. Barrels lock the same way; chest minecarts, chest boats and loot
-copies have no lock button. No key item, no configuration - locking is a claim, sized for a server where
-the threat model is housemates. A double chest locks as a whole (including a chest placed against
-a locked single later), and anyone refused is told whose lock it is.
+The button beside a chest's name locks it: a locked chest can only be opened, broken or painted by whoever locked it, or an op. Barrels lock the same way; chest minecarts, chest boats and loot copies have no lock button. No key item, no configuration - locking is a claim, sized for a server where the threat model is housemates. A double chest locks as a whole (including a chest placed against a locked single later), and anyone refused is told whose lock it is.
 
-Press it again and the lock goes public: anyone can open the chest, but only the owner or an op can
-break it, paint it, or change the lock. That is the community chest at spawn, which everyone should
-be able to use and nobody should be able to walk off with. A third press unlocks it. The switch
-itself only ever answers to the owner or an op, whichever state it is in.
+Press it again and the lock goes public: anyone can open the chest, but only the owner or an op can break it, paint it, or change the lock. That is the community chest at spawn, which everyone should be able to use and nobody should be able to walk off with. A third press unlocks it. The switch itself only ever answers to the owner or an op, whichever state it is in.
 
-The mods menu lists every chest you have locked, in every dimension, with an unlock beside each,
-so the one locked in a base three dimensions ago does not need walking back to.
+The mods menu lists every chest you have locked, in every dimension, with an unlock beside each, so the one locked in a base three dimensions ago does not need walking back to.
 
-Hoppers still work a locked chest: the lock is against players, and automation is the owner's own
-plumbing.
+Hoppers still work a locked chest: the lock is against players, and automation is the owner's own plumbing.
 
-Some places have no lock switch at all: another mod can say a chest there is not to be locked, as
-[PvP Dimensions](https://github.com/fatlard1993/pvp-dimensions) does inside its arenas, where
-taking from the other team's chest is half the game. A lock put on before stays until its owner
-takes it off.
+Some places have no lock switch at all: another mod can say a chest there is not to be locked, as [PvP Dimensions](https://github.com/fatlard1993/pvp-dimensions) does inside its arenas, where taking from the other team's chest is half the game. A lock put on before stays until its owner takes it off.
 
 ### Sharing one
 
@@ -68,17 +56,11 @@ Look at the chest and use `/chest-lock`:
 | `/chest-lock list` | Who can use this chest |
 
 The chest is the one under your crosshair, because that is how the lock went on in the first place
-- a button on the chest's own screen - and asking for coordinates to undo something you did by
-pointing at it is a different mod's idea of consistency.
+- a button on the chest's own screen - and asking for coordinates to undo something you did by pointing at it is a different mod's idea of consistency.
 
-Look at a locked chest with [Block Tip](https://github.com/fatlard1993/block-tip) installed and it
-tells you whose it is before you try the lid - and whether it is one you can open. A lock that only
-announces itself by refusing you is an answer arriving after the question.
+Look at a locked chest with [Block Tip](https://github.com/fatlard1993/block-tip) installed and it tells you whose it is before you try the lid - and whether it is one you can open. A lock that only announces itself by refusing you is an answer arriving after the question.
 
-Only the owner (or an op) changes the list; anyone who can open the chest can ask who else can.
-Somebody let in gets the owner's access, breaking included: they can empty it by opening it
-anyway, so withholding the pickaxe would protect nothing. Unlocking and re-locking starts the list
-empty.
+Only the owner (or an op) changes the list; anyone who can open the chest can ask who else can. Somebody let in gets the owner's access, breaking included: they can empty it by opening it anyway, so withholding the pickaxe would protect nothing. Unlocking and re-locking starts the list empty.
 
 ## Drag And Scroll
 
