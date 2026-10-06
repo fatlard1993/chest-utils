@@ -2,6 +2,8 @@
 
 A Minecraft Fabric mod. Dyed chests, and the buttons a chest should always have had.
 
+![A chest open on this mod's screen, its row of buttons along the top](screenshots/chest-buttons.png)
+
 ## What This Mod Does
 
 Two things, both about the time spent moving items rather than the items themselves.
