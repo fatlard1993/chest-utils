@@ -14,6 +14,14 @@ public class Main implements ModInitializer {
 		ChestScreens.register();
 		HotbarCommand.register();
 		ChestShareCommand.register();
+		// The chest under the crosshair is still under it with the menu open, so its lock's
+		// commands work as buttons; sharing asks who by face rather than for a name. The lock
+		// itself stays on the chest's own screen, where it was always put on.
+		justfatlard.pandorical.api.PandoricalApi.actionMenus().suggestMenu(MOD_ID + ":chest", "Chest", java.util.List.of(
+			justfatlard.pandorical.api.ActionMenuApi.Button.runs("minecraft:chest", "Who has it", "chest-lock list"),
+			justfatlard.pandorical.api.ActionMenuApi.Button.runs("minecraft:player_head", "Share", "chest-lock share {players}"),
+			justfatlard.pandorical.api.ActionMenuApi.Button.runs("minecraft:skeleton_skull", "Unshare", "chest-lock unshare {players}"),
+			justfatlard.pandorical.api.ActionMenuApi.Button.runs("minecraft:nether_star", "Hotbar", "hotbar")));
 
 		// Guarded class load: the tip registration names block-tip types, and block-tip is a
 		// suggestion rather than a requirement.
