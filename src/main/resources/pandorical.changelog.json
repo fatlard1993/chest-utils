@@ -3,6 +3,9 @@
 		"A row of buttons on every chest, sort, dump, restock, take all, and sixteen colours of paint for a chest that is already standing."
 	],
 	"versions": {
+		"1.1.3": [
+			"Works with Pandorical as old as 15.13.0. Before 15.17 the Chest menu leaves out Share and Unshare: /chest-lock share and /chest-lock unshare still do it."
+		],
 		"1.1.2": [
 			"A Chest action menu for the chest you are looking at: who has it, and sharing with or taking back from players picked by face. Hotbar says what each slot is locked to."
 		],

@@ -7,6 +7,7 @@ For what the mod is and how it plays, see [README.md](README.md).
 | File | What is in it |
 |---|---|
 | `Main.java` | Event wiring: break guard, paint and lock cleanup, the hotbar read-back, mods-menu entries |
+| `PandoricalVersion.java` | Whether the running Pandorical has a feature newer than the oldest this loads with |
 | `screen/ChestScreens.java` | Both screens, their buttons, search, the chest lock switch, and the hotbar switch |
 | `action/ChestActions.java` | Sort, dump, top up, empty, and the hotbar refill |
 | `action/ItemOrder.java` | The creative menu's own ordering, read at server start |
