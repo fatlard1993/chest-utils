@@ -3,6 +3,9 @@
 		"A row of buttons on every chest, sort, dump, restock, take all, and sixteen colours of paint for a chest that is already standing."
 	],
 	"versions": {
+		"1.1.6": [
+			"A demo to play in PvP Dimensions' onboarding."
+		],
 		"1.1.5": [
 			"Drop changelog notes for changes nothing in the game shows."
 		],
