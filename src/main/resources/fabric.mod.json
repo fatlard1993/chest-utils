@@ -3,7 +3,7 @@
 	"id": "chest-utils",
 	"version": "${version}",
 	"name": "Chest Utils",
-	"description": "Dyed chests, and the buttons a chest should always have had: sort, dump, top up, empty. Plus drag and scroll to move stacks without picking them up.",
+	"description": "Dyed chests, and sort, dump, top-up and empty buttons on every chest",
 	"authors": [
 		"justfatlard"
 	],
